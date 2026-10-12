@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EcoSort — Sort It Right</title>
+<style>
+  :root{
+    --bg:#0C2A1E; --card:#FFFFFF; --ink:#16271F; --muted:#5B7266;
+    --green:#1E9E5A; --green-d:#157A45; --leaf:#7BC47F; --gold:#F2B628;
+    --ok:#1FA971; --ok-bg:#E7F7EF; --no:#E0536B; --no-bg:#FBE9EC; --line:#E2EEE6;
+    --paper:#2F6BE0; --plastic:#E0A020; --glass:#17B37E; --food:#A9742E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1100px 650px at 50% -10%,#154A32,#0C2A1E 60%),#0C2A1E;color:var(--ink);
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px}
+  .wrap{width:100%;max-width:720px}
+  .app{background:var(--card);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
+  .top{background:linear-gradient(120deg,#157A45,#1E9E5A 60%,#35B36B);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;background:rgba(255,255,255,.16);border-radius:12px;font-size:23px}
+  .brand{font-weight:800;font-size:20px}
+  .brand small{display:block;font-weight:600;font-size:12px;opacity:.9}
+  .bar{height:8px;background:#E8F2EC}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--leaf),var(--green));transition:width .4s}
+  .body{padding:24px 26px 30px}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--green-d);background:#E3F4EA;padding:6px 12px;border-radius:999px}
+  h1{font-size:30px;margin:14px 0 6px;line-height:1.1}
+  .lead{font-size:16px;color:var(--muted);line-height:1.5;margin:6px 0 16px}
+  .facts{display:grid;gap:10px;margin:16px 0 22px}
+  .fact{display:flex;gap:12px;align-items:center;background:#F4FAF6;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:15px;color:#2d4338}
+  .fact .e{font-size:20px}
+  .itemcard{text-align:center;background:#F4FAF6;border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin:6px 0 4px}
+  .itemcard .emoji{font-size:62px;line-height:1}
+  .itemcard .name{font-size:22px;font-weight:800;margin-top:6px}
+  .itemcard .ask{font-size:14px;color:var(--muted);margin-top:2px}
+  .bins{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 4px}
+  .bin{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:16px;font-weight:700;background:#fff;cursor:pointer;transition:.15s}
+  .bin:hover{transform:translateY(-1px)}
+  .bin .ico{width:30px;height:30px;flex:0 0 30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:16px}
+  .bin.paper .ico{background:var(--paper)} .bin.plastic .ico{background:var(--plastic)}
+  .bin.glass .ico{background:var(--glass)} .bin.food .ico{background:var(--food)}
+  .bin.correct{border-color:var(--ok);background:var(--ok-bg)}
+  .bin.wrong{border-color:var(--no);background:var(--no-bg)}
+  .bin:disabled{cursor:default;opacity:.95}
+  .fb{margin-top:16px;border-radius:14px;padding:13px 16px;font-size:15px;line-height:1.45;display:none}
+  .fb.show{display:block}.fb.ok{background:var(--ok-bg);border:1px solid #BFE8D4;color:#0d6a46}.fb.no{background:var(--no-bg);border:1px solid #F3C9D1;color:#9c2742}
+  .fb b{display:block;margin-bottom:2px}
+  .row{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+  .score{font-size:14px;font-weight:700;color:var(--muted)}.score b{color:var(--green-d)}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(30,158,90,.3)}
+  .btn:hover{background:var(--green-d)}
+  .center{text-align:center}
+  .ring{width:150px;height:150px;margin:6px auto 10px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) var(--p,0%), #E8F2EC 0)}
+  .ring .in{width:118px;height:118px;border-radius:50%;background:#fff;display:grid;place-items:center}
+  .ring .in b{font-size:36px;color:var(--green-d);line-height:1}
+  .ring .in span{font-size:12px;color:var(--muted);font-weight:700}
+  .badge{display:inline-block;margin:8px 0 2px;font-size:22px;font-weight:800;color:var(--green-d)}
+  .hide{display:none}
+  .foot{padding:12px 26px 22px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="app">
+  <div class="top"><div class="logo">♻️</div><div class="brand">EcoSort<small>Sort it right, save the planet</small></div></div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="body" id="screen"></div>
+  <div class="foot">EcoSort · a recycling game by Shruthi Sree</div>
+</div></div>
+<script>
+const BINS = {
+  paper:{label:"Paper",ico:"📄",cls:"paper"},
+  plastic:{label:"Plastic",ico:"🧴",cls:"plastic"},
+  glass:{label:"Glass",ico:"🍾",cls:"glass"},
+  food:{label:"Food / Organic",ico:"🍎",cls:"food"},
+};
+const ITEMS = [
+ {e:"📰",n:"Newspaper",bin:"paper",why:"Paper and card go in the paper bin, so they can be pulped and made into new paper."},
+ {e:"🥤",n:"Plastic cup",bin:"plastic",why:"Clean plastic cups and bottles go in the plastic bin to be recycled into new plastic."},
+ {e:"🍌",n:"Banana peel",bin:"food",why:"Food scraps go in the organic bin, where they can break down into compost."},
+ {e:"🍾",n:"Glass bottle",bin:"glass",why:"Glass bottles and jars go in the glass bin and can be melted and reused again and again."},
+ {e:"📦",n:"Cardboard box",bin:"paper",why:"Flatten cardboard and put it with paper, it is one of the easiest things to recycle."},
+ {e:"🛍️",n:"Plastic bag",bin:"plastic",why:"Clean plastic bags belong with plastics, never with paper or food."},
+ {e:"🥚",n:"Eggshells",bin:"food",why:"Eggshells are organic waste and go in the food bin to be composted."},
+ {e:"🫙",n:"Glass jar",bin:"glass",why:"Rinse glass jars and put them in the glass bin so the glass can be reused."},
+ {e:"📖",n:"Old magazine",bin:"paper",why:"Magazines are paper, so they go in the paper bin to be recycled."},
+ {e:"🧴",n:"Shampoo bottle",bin:"plastic",why:"Empty plastic bottles go in the plastic bin, with the lid on."},
+];
+let i=0,score=0,answered=false;
+const el=document.getElementById('screen'),prog=document.getElementById('prog');
+
+function start(){
+  i=0;score=0;answered=false;prog.style.width="0%";
+  el.innerHTML=`
+   <span class="pill">♻️ Recycling Challenge</span>
+   <h1>Can you sort it right?</h1>
+   <p class="lead">An item of rubbish appears. Tap the right bin to recycle it. Learn where everything goes, and why it matters.</p>
+   <div class="facts">
+     <div class="fact"><span class="e">📄</span><div>Paper and cardboard become new paper.</div></div>
+     <div class="fact"><span class="e">🧴</span><div>Clean plastic is recycled into new plastic.</div></div>
+     <div class="fact"><span class="e">🍾</span><div>Glass can be reused again and again.</div></div>
+     <div class="fact"><span class="e">🍎</span><div>Food scraps become compost, not landfill.</div></div>
+   </div>
+   <button class="btn" onclick="render()">Start sorting →</button>`;
+}
+function render(){
+  answered=false;const it=ITEMS[i];prog.style.width=(i/ITEMS.length*100)+"%";
+  el.innerHTML=`
+   <div style="display:flex;justify-content:space-between;align-items:center">
+     <span class="pill">Item ${i+1} of ${ITEMS.length}</span>
+     <span class="score">Score: <b id="sc">${score}</b> / ${ITEMS.length}</span>
+   </div>
+   <div class="itemcard"><div class="emoji">${it.e}</div><div class="name">${it.n}</div><div class="ask">Which bin does this go in?</div></div>
+   <div class="bins" id="bins"></div>
+   <div class="fb" id="fb"></div>
+   <div class="row"><span></span><button class="btn hide" id="next">Next →</button></div>`;
+  const bins=document.getElementById('bins');
+  for(const key in BINS){const b=BINS[key];
+    const btn=document.createElement('button');btn.className='bin '+b.cls;
+    btn.innerHTML=`<span class="ico">${b.ico}</span><span>${b.label}</span>`;
+    btn.onclick=()=>choose(key,btn,it);bins.appendChild(btn);}
+}
+function choose(key,btn,it){
+  if(answered)return;answered=true;
+  const btns=[...document.querySelectorAll('.bin')];btns.forEach(b=>b.disabled=true);
+  const correct=key===it.bin;
+  btns.forEach(b=>{if(b.classList.contains(BINS[it.bin].cls))b.classList.add('correct');});
+  if(!correct)btn.classList.add('wrong');
+  if(correct){score++;document.getElementById('sc').textContent=score;}
+  const fb=document.getElementById('fb');fb.className='fb show '+(correct?'ok':'no');
+  fb.innerHTML=`<b>${correct?'✅ Correct!':'❌ Not quite, it goes in '+BINS[it.bin].label+'.'}</b>${it.why}`;
+  const next=document.getElementById('next');next.classList.remove('hide');
+  next.textContent=(i===ITEMS.length-1)?"See my result →":"Next →";
+  next.onclick=()=>{i++;(i<ITEMS.length)?render():results();};
+}
+function results(){
+  prog.style.width="100%";const pct=Math.round(score/ITEMS.length*100);
+  let level,msg;
+  if(pct>=90){level="🌍 Planet Protector";msg="Amazing. You know exactly how to sort and recycle. The planet thanks you.";}
+  else if(pct>=70){level="♻️ Recycling Star";msg="Great sorting. You get most things in the right bin. Review the few you missed and you are set.";}
+  else if(pct>=50){level="🌱 Green Learner";msg="Good start. Read the tips again and play once more to improve.";}
+  else{level="🔰 Eco Beginner";msg="Everyone starts somewhere. Learn where each item goes and try again, you will get greener fast.";}
+  el.innerHTML=`<div class="center">
+     <span class="pill">Your result</span>
+     <div class="ring" style="--p:${pct}%"><div class="in"><b>${score}/${ITEMS.length}</b><span>${pct}% SORTED</span></div></div>
+     <div class="badge">${level}</div><p class="lead">${msg}</p>
+     <button class="btn" onclick="start()">Play again ↻</button></div>`;
+}
+start();
+</script>
+</body>
+</html>
