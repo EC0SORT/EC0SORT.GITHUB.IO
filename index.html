@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EcoSort — Catch and Sort</title>
+<style>
+  :root{
+    --card:#FFFFFF; --ink:#16271F; --muted:#5B7266;
+    --green:#1E9E5A; --green-d:#157A45; --leaf:#7BC47F; --gold:#F2B628;
+    --paper:#2F6BE0; --plastic:#E0A020; --glass:#17B37E; --food:#A9742E;
+    --sky1:#CFF0DD; --sky2:#EAF8F0; --ground:#9ED9AE;
+  }
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1100px 650px at 50% -10%,#154A32,#0C2A1E 60%),#0C2A1E;color:var(--ink);
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px}
+  .wrap{width:100%;max-width:560px}
+  .app{background:var(--card);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
+  .top{background:linear-gradient(120deg,#157A45,#1E9E5A 60%,#35B36B);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:11px}
+  .logo{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;background:rgba(255,255,255,.16);border-radius:11px;font-size:21px}
+  .brand{font-weight:800;font-size:19px}.brand small{display:block;font-weight:600;font-size:11.5px;opacity:.9}
+  /* HUD */
+  .hud{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:#F4FAF6;border-bottom:1px solid #E2EEE6;font-weight:800;color:var(--green-d);font-size:15px}
+  .hud .lives{letter-spacing:2px;font-size:16px}
+  .hud .mid{color:var(--muted);font-weight:700;font-size:13px}
+  /* play area */
+  .stage{position:relative;height:430px;overflow:hidden;background:linear-gradient(180deg,var(--sky2),var(--sky1));}
+  .stage .cloud{position:absolute;color:#fff;opacity:.6;font-size:34px}
+  .item{position:absolute;top:0;font-size:46px;will-change:transform;filter:drop-shadow(0 3px 2px rgba(0,0,0,.12));transition:none}
+  .item.caught{transition:transform .28s ease,opacity .28s ease;opacity:0}
+  .pop{position:absolute;font-weight:900;color:var(--green-d);font-size:20px;pointer-events:none;animation:rise .7s ease forwards}
+  @keyframes rise{from{transform:translateY(0);opacity:1}to{transform:translateY(-34px);opacity:0}}
+  /* bins */
+  .bins{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:12px 12px 14px;background:#EAF3EC}
+  .bin{border:none;border-radius:12px 12px 14px 14px;padding:10px 4px 12px;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:12px;line-height:1.1;box-shadow:0 5px 0 rgba(0,0,0,.14);transition:transform .08s}
+  .bin:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+  .bin .ico{font-size:22px}
+  .bin.paper{background:var(--paper)} .bin.plastic{background:var(--plastic)}
+  .bin.glass{background:var(--glass)} .bin.food{background:var(--food)}
+  .bin.flash{outline:4px solid #fff;outline-offset:-4px;animation:buzz .3s}
+  @keyframes buzz{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(22,39,31,.9);color:#fff;
+    padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:opacity .2s;max-width:88%;text-align:center}
+  .toast.show{opacity:1}
+  /* overlay screens */
+  .screen{padding:26px 24px 30px;text-align:center}
+  .pill{display:inline-flex;gap:6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--green-d);background:#E3F4EA;padding:6px 12px;border-radius:999px}
+  h1{font-size:28px;margin:14px 0 6px}
+  .lead{font-size:15.5px;color:var(--muted);line-height:1.5;margin:6px 0 16px}
+  .how{display:grid;gap:9px;margin:14px 0 20px;text-align:left}
+  .how div{background:#F4FAF6;border:1px solid #E2EEE6;border-radius:12px;padding:10px 13px;font-size:14px;color:#2d4338}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(30,158,90,.3)}
+  .btn:active{transform:translateY(1px)}
+  .ring{width:140px;height:140px;margin:8px auto 10px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) var(--p,0%), #E8F2EC 0)}
+  .ring .in{width:110px;height:110px;border-radius:50%;background:#fff;display:grid;place-items:center}
+  .ring .in b{font-size:30px;color:var(--green-d);line-height:1}.ring .in span{font-size:11px;color:var(--muted);font-weight:700}
+  .badge{font-size:21px;font-weight:800;color:var(--green-d);margin:6px 0}
+  .foot{padding:10px 20px 18px;color:var(--muted);font-size:11.5px;text-align:center}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="app">
+  <div class="top"><div class="logo">♻️</div><div class="brand">EcoSort<small>Catch it, sort it, save the planet</small></div></div>
+
+  <div id="hud" class="hud hidden">
+    <span>Score <span id="score">0</span></span>
+    <span class="mid">Level <b id="level">1</b> · Combo <b id="combo">x1</b></span>
+    <span class="lives" id="lives">❤️❤️❤️</span>
+  </div>
+
+  <div id="stage" class="stage hidden">
+    <div class="cloud" style="top:30px;left:30px">☁️</div>
+    <div class="cloud" style="top:70px;right:40px;font-size:26px">☁️</div>
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <div id="bins" class="bins hidden">
+    <button class="bin paper"   data-bin="paper"><span class="ico">📄</span>Paper</button>
+    <button class="bin plastic" data-bin="plastic"><span class="ico">🧴</span>Plastic</button>
+    <button class="bin glass"   data-bin="glass"><span class="ico">🍾</span>Glass</button>
+    <button class="bin food"    data-bin="food"><span class="ico">🍎</span>Food</button>
+  </div>
+
+  <div id="screen" class="screen"></div>
+  <div class="foot">EcoSort · a recycling game by Shruthi Sree</div>
+</div></div>
+
+<script>
+const ITEMS=[
+ {e:"📰",bin:"paper"},{e:"📦",bin:"paper"},{e:"📖",bin:"paper"},{e:"✉️",bin:"paper"},
+ {e:"🥤",bin:"plastic"},{e:"🧴",bin:"plastic"},{e:"🛍️",bin:"plastic"},{e:"🧃",bin:"plastic"},
+ {e:"🍾",bin:"glass"},{e:"🫙",bin:"glass"},{e:"🍶",bin:"glass"},
+ {e:"🍌",bin:"food"},{e:"🍎",bin:"food"},{e:"🥚",bin:"food"},{e:"🍉",bin:"food"},
+];
+const NAME={paper:"Paper",plastic:"Plastic",glass:"Glass",food:"Food / Organic"};
+const stage=document.getElementById('stage'), hud=document.getElementById('hud'),
+      binsEl=document.getElementById('bins'), screenEl=document.getElementById('screen'),
+      toast=document.getElementById('toast');
+let G=null, raf=null;
+
+function startScreen(){
+  hud.classList.add('hidden');stage.classList.add('hidden');binsEl.classList.add('hidden');
+  screenEl.classList.remove('hidden');
+  screenEl.innerHTML=`
+    <span class="pill">♻️ Catch and Sort</span>
+    <h1>EcoSort</h1>
+    <p class="lead">Rubbish is falling. Tap the right bin to catch each item before it hits the ground. Sort fast, build a combo, and do not let too much slip past.</p>
+    <div class="how">
+      <div>📄 Paper &amp; card → <b>Paper</b>, 🧴 bottles &amp; bags → <b>Plastic</b></div>
+      <div>🍾 bottles &amp; jars → <b>Glass</b>, 🍎 food scraps → <b>Food</b></div>
+      <div>✅ Right bin = points and a bigger combo. ❌ Wrong bin or a miss = you lose a ❤️.</div>
+    </div>
+    <button class="btn" onclick="startGame()">Play ▶</button>`;
+}
+
+function startGame(){
+  screenEl.classList.add('hidden');
+  hud.classList.remove('hidden');stage.classList.remove('hidden');binsEl.classList.remove('hidden');
+  G={score:0,lives:3,level:1,combo:0,caught:0,wrong:0,speed:1.7,item:null,resolved:true,lastSpawn:0,over:false};
+  updateHUD();
+  // remove any leftover items
+  [...stage.querySelectorAll('.item,.pop')].forEach(n=>n.remove());
+  G.resolved=true;spawn();
+  cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(loop);
+}
+function updateHUD(){
+  document.getElementById('score').textContent=G.score;
+  document.getElementById('level').textContent=G.level;
+  document.getElementById('combo').textContent="x"+(1+Math.floor(G.combo/4));
+  document.getElementById('lives').textContent="❤️".repeat(G.lives)+"🖤".repeat(3-G.lives);
+}
+function spawn(){
+  const def=ITEMS[Math.floor(Math.random()*ITEMS.length)];
+  const el=document.createElement('div');el.className='item';el.textContent=def.e;
+  const w=stage.clientWidth; const x=24+Math.random()*(w-72);
+  el.style.left=x+'px';el.style.top='-6px';
+  stage.appendChild(el);
+  G.item={el,bin:def.bin,x,y:-6};G.resolved=false;
+}
+let last=0;
+function loop(ts){
+  const dt=Math.min(34,ts-last);last=ts;
+  if(G&&!G.over){
+    if(G.item&&!G.resolved){
+      G.item.y += G.speed*(dt/16.7);
+      G.item.el.style.top=G.item.y+'px';
+      const floor=stage.clientHeight-10;
+      if(G.item.y>=floor){ miss(); }
+    }
+    raf=requestAnimationFrame(loop);
+  }
+}
+function popAt(x,y,txt,color){
+  const p=document.createElement('div');p.className='pop';p.textContent=txt;
+  if(color)p.style.color=color;p.style.left=x+'px';p.style.top=y+'px';stage.appendChild(p);
+  setTimeout(()=>p.remove(),700);
+}
+function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(showToast._t);showToast._t=setTimeout(()=>toast.classList.remove('show'),1100);}
+
+function pickBin(binKey){
+  if(!G||G.over||G.resolved||!G.item)return;
+  G.resolved=true;
+  const correct=binKey===G.item.bin;
+  if(correct){
+    const mult=1+Math.floor(G.combo/4);
+    G.score+=10*mult;G.combo++;G.caught++;
+    popAt(G.item.x,G.item.y,"+"+(10*mult));
+    beep(880,0.06);
+    // fly to bin
+    const binBtn=binsEl.querySelector('[data-bin="'+binKey+'"]');
+    const br=binBtn.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+    const tx=(br.left+br.width/2-sr.left)-G.item.x-18, ty=(sr.height)-G.item.y;
+    G.item.el.classList.add('caught');G.item.el.style.transform=`translate(${tx}px,${ty}px) scale(.4)`;
+    if(G.caught%5===0){G.level++;G.speed+=0.28;}
+  }else{
+    G.lives--;G.combo=0;G.wrong++;
+    beep(180,0.14);
+    const right=binsEl.querySelector('[data-bin="'+G.item.bin+'"]');
+    right.classList.add('flash');setTimeout(()=>right.classList.remove('flash'),300);
+    showToast("That one goes in "+NAME[G.item.bin]);
+    G.item.el.classList.add('caught');G.item.el.style.transform='translateY(16px) scale(.7)';
+  }
+  const old=G.item; setTimeout(()=>old.el.remove(),300);
+  G.item=null;updateHUD();
+  if(G.lives<=0){ gameOver(); } else { setTimeout(()=>{if(!G.over)spawn();},260); }
+}
+function miss(){
+  if(G.resolved)return;G.resolved=true;
+  G.lives--;G.combo=0;G.wrong++;beep(150,0.16);
+  showToast("Missed! "+NAME[G.item.bin]);
+  const old=G.item;old.el.remove();G.item=null;updateHUD();
+  if(G.lives<=0){gameOver();}else{setTimeout(()=>{if(!G.over)spawn();},220);}
+}
+function gameOver(){
+  G.over=true;cancelAnimationFrame(raf);
+  const total=G.caught+G.wrong;
+  const acc= total? Math.round(G.caught/total*100):0;
+  let level,msg;
+  if(G.score>=250){level="🌍 Planet Protector";msg="Incredible sorting. The planet is lucky to have you.";}
+  else if(G.score>=150){level="♻️ Recycling Star";msg="Great run. You sort fast and well.";}
+  else if(G.score>=70){level="🌱 Green Learner";msg="Nice work. Play again to beat your score.";}
+  else{level="🔰 Eco Beginner";msg="Good start. Learn the bins and your score will climb fast.";}
+  hud.classList.add('hidden');stage.classList.add('hidden');binsEl.classList.add('hidden');
+  screenEl.classList.remove('hidden');
+  screenEl.innerHTML=`
+    <span class="pill">Game over</span>
+    <div class="ring" style="--p:${acc}%"><div class="in"><b>${G.score}</b><span>SCORE</span></div></div>
+    <div class="badge">${level}</div>
+    <p class="lead">${msg}<br>You sorted <b>${G.caught}</b> items correctly, reached <b>level ${G.level}</b>, and sorted ${acc}% right.</p>
+    <button class="btn" onclick="startGame()">Play again ↻</button>`;
+}
+// simple sound
+let AC=null;
+function beep(freq,dur){
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=freq;o.type='sine';
+    o.connect(g);g.connect(AC.destination);g.gain.value=0.05;o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+binsEl.querySelectorAll('.bin').forEach(b=>b.addEventListener('click',()=>pickBin(b.dataset.bin)));
+document.addEventListener('keydown',e=>{const m={'1':'paper','2':'plastic','3':'glass','4':'food'};if(m[e.key])pickBin(m[e.key]);});
+startScreen();
+</script>
+</body>
+</html>
